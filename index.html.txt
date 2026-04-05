@@ -1,0 +1,171 @@
+<!-- ========================= index.html ========================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SADEEmax</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SADEEmax</div>
+  <nav>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#shop">Shop</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><button id="cart-btn">Cart (<span id="cart-count">0</span>)</button></li>
+    </ul>
+  </nav>
+  <div class="menu-toggle">☰</div>
+</header>
+
+<section id="home" class="hero">
+  <h1>Welcome to SADEEmax</h1>
+  <p>Shop Smarter. Live Better.</p>
+  <a href="#shop" class="btn">Shop Now</a>
+</section>
+
+<section id="shop" class="products">
+  <h2>Products</h2>
+  <div class="product-grid" id="product-grid"></div>
+</section>
+
+<section id="about" class="about">
+  <h2>About Us</h2>
+  <p>SADEEmax is your trusted online store delivering premium quality products with style and reliability.</p>
+</section>
+
+<section id="contact" class="contact">
+  <h2>Contact Us</h2>
+  <form id="contact-form">
+    <input type="text" id="name" placeholder="Your Name" required>
+    <input type="email" id="email" placeholder="Your Email" required>
+    <textarea id="message" placeholder="Your Message" required></textarea>
+    <button type="submit">Send</button>
+  </form>
+</section>
+
+<div class="cart" id="cart">
+  <h3>Your Cart</h3>
+  <div id="cart-items"></div>
+  <p>Total: $<span id="cart-total">0</span></p>
+  <button onclick="toggleCart()">Close</button>
+</div>
+
+<div class="modal" id="product-modal">
+  <div class="modal-content">
+    <span id="close-modal">&times;</span>
+    <img id="modal-img">
+    <h3 id="modal-name"></h3>
+    <p id="modal-price"></p>
+    <button id="modal-add">Add to Cart</button>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 SADEEmax</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+
+<!-- ========================= style.css ========================= -->
+<style>
+body { margin:0; font-family:Arial; background:#111; color:#fff; }
+.navbar { display:flex; justify-content:space-between; padding:15px; background:#000; position:sticky; top:0; }
+.logo { color:gold; font-size:24px; }
+.nav-links { display:flex; gap:15px; list-style:none; }
+.nav-links a, button { color:white; text-decoration:none; background:none; border:none; cursor:pointer; }
+.hero { text-align:center; padding:100px 20px; background:linear-gradient(#000,#222); }
+.btn { background:gold; color:#000; padding:10px 20px; text-decoration:none; }
+.products { padding:40px; }
+.product-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
+.product { background:#222; padding:15px; text-align:center; }
+.product img { width:100%; }
+.cart { position:fixed; right:-300px; top:0; width:300px; height:100%; background:#222; padding:20px; transition:0.3s; }
+.cart.active { right:0; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
+.modal-content { background:#fff; color:#000; margin:10% auto; padding:20px; width:300px; }
+</style>
+
+
+<!-- ========================= script.js ========================= -->
+<script>
+const products = [
+  {id:1, name:"Headphones", price:50, img:"https://via.placeholder.com/200"},
+  {id:2, name:"Shoes", price:80, img:"https://via.placeholder.com/200"},
+  {id:3, name:"Watch", price:120, img:"https://via.placeholder.com/200"},
+  {id:4, name:"Bag", price:60, img:"https://via.placeholder.com/200"}
+];
+
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+const grid = document.getElementById('product-grid');
+
+function renderProducts() {
+  grid.innerHTML = '';
+  products.forEach(p => {
+    grid.innerHTML += `
+      <div class="product" onclick="openModal(${p.id})">
+        <img src="${p.img}">
+        <h3>${p.name}</h3>
+        <p>$${p.price}</p>
+        <button onclick="addToCart(${p.id}); event.stopPropagation();">Add</button>
+      </div>`;
+  });
+}
+
+function addToCart(id) {
+  const item = cart.find(i => i.id === id);
+  if(item) item.qty++;
+  else cart.push({...products.find(p=>p.id===id), qty:1});
+  updateCart();
+}
+
+function updateCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+  document.getElementById('cart-count').innerText = cart.reduce((a,b)=>a+b.qty,0);
+  const cartItems = document.getElementById('cart-items');
+  cartItems.innerHTML='';
+  let total=0;
+  cart.forEach(i=>{
+    total += i.price*i.qty;
+    cartItems.innerHTML += `<p>${i.name} x${i.qty}</p>`;
+  });
+  document.getElementById('cart-total').innerText = total;
+}
+
+function toggleCart(){
+  document.getElementById('cart').classList.toggle('active');
+}
+
+document.getElementById('cart-btn').onclick = toggleCart;
+
+function openModal(id){
+  const p = products.find(x=>x.id===id);
+  document.getElementById('modal-img').src = p.img;
+  document.getElementById('modal-name').innerText = p.name;
+  document.getElementById('modal-price').innerText = '$'+p.price;
+  document.getElementById('modal').style.display='block';
+  document.getElementById('modal-add').onclick = ()=>addToCart(id);
+}
+
+document.getElementById('close-modal').onclick = ()=>{
+  document.getElementById('modal').style.display='none';
+};
+
+// Contact form validation
+document.getElementById('contact-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  alert('Message sent!');
+});
+
+renderProducts();
+updateCart();
+</script>
